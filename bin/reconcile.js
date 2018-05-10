@@ -1,10 +1,14 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 const path = require('path');
 const program = require('commander');
 
 const CSVReader = require('../lib/readers/csv-reader');
 const DiffReader = require('../lib/readers/diff-reader');
 const JSONWriter = require('../lib/writers/json');
-const Reconciler = require('../lib/index');
+const ReconciliationManager = require('../lib/index');
 const SQSOutput = require('../lib/output/sqs');
 const SQSWriter = require('../lib/writers/sqs');
 const StdoutOutput = require('../lib/output/stdout');
@@ -57,5 +61,5 @@ if (program.json) {
   writer = new SQSWriter(program.url, output);
 }
 
-const reconciler = new Reconciler(program.url, program.region, reader, writer);
+const reconciler = new ReconciliationManager(reader, writer);
 reconciler.run();
