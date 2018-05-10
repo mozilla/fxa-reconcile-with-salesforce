@@ -2,19 +2,21 @@ const path = require('path');
 const program = require('commander');
 const Reconciler = require('../lib/index');
 const DiffReader = require('../lib/readers/diff-reader');
+const SQSWriter = require('../lib/writers/sqs');
+const JSONWriter = require('../lib/writers/json');
 
 program
   .option('-i, --input <filename>', 'Differences file, expected to be output of diff')
   .option('-u, --url <SQS_url>', 'SQS URL')
   .option('-r, --region <AWS_region>', 'AWS Region')
-  .option('--go', 'Do it, for real.');
+  .option('--go', 'Send SQS messages, for real.');
 
 
 program.parse(process.argv);
 
 function usage () {
   console.log(`Usage:
-  reconcile -i <filename> -u <SQS_url> -r <AWS_region>
+  reconcile-diff -i <filename> -u <SQS_url> -r <AWS_region>
 `);
 }
 

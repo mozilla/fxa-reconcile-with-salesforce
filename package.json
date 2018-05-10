@@ -10,6 +10,7 @@
   "license": "MPL-2.0",
   "dependencies": {
     "aws-sdk": "^2.234.1",
-    "commander": "^2.15.1"
+    "commander": "^2.15.1",
+    "n-readlines": "^0.2.8"
   }
 }
