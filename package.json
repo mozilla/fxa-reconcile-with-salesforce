@@ -9,6 +9,7 @@
   "author": "Shane Tomlinson <stomlinson@mozilla.com> (https://shanetomlinson.com)",
   "license": "MPL-2.0",
   "dependencies": {
+    "aws-sdk": "^2.234.1",
     "commander": "^2.15.1"
   }
 }
