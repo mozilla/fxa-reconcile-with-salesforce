@@ -12,11 +12,13 @@ const ReconciliationManager = require('../lib/index');
 const SQSOutput = require('../lib/output/sqs');
 const SQSWriter = require('../lib/writers/sqs');
 const StdoutOutput = require('../lib/output/stdout');
+const NullOutput = require('../lib/output/null');
 
 program
   .option('-d, --diff [filename]', 'Diff file')
   .option('-f, --fxa [filename]', 'FxA CSV, format expected to be `uid,email,locale`')
   .option('-s, --salesforce [filename]', 'Salesforce CSV, format expected to be `uid,email`')
+  .option('-n, --null', 'No output')
   .option('-j, --json', 'Write JSON output')
   .option('-u, --url <SQS_url>', 'SQS URL')
   .option('-r, --region <AWS_region>', 'AWS Region')
@@ -27,8 +29,8 @@ program.parse(process.argv);
 
 function usage () {
   console.log(`Usage:
-  reconcile-csv -f <fxa_filename> -s <salesforce_filename> -u <SQS_url> -r <AWS_region>
-  reconcile-csv -d <diff_filename> -u <SQS_url> -r <AWS_region>
+  reconcile -f <fxa_filename> -s <salesforce_filename> -u <SQS_url> -r <AWS_region>
+  reconcile -d <diff_filename> -u <SQS_url> -r <AWS_region>
 `);
 }
 
@@ -50,7 +52,14 @@ if (program.fxa) {
 
 let writer;
 if (program.json) {
-  writer = new JSONWriter(new StdoutOutput());
+  let output;
+  if (program.null) {
+    output = new NullOutput();
+  } else {
+    output = new StdoutOutput();
+  }
+
+  writer = new JSONWriter(output);
 } else {
   let output;
   if (!! program.go) {

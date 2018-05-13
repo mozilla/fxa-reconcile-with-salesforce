@@ -12,5 +12,8 @@
     "aws-sdk": "^2.234.1",
     "commander": "^2.15.1",
     "n-readlines": "^0.2.8"
+  },
+  "devDependencies": {
+    "node-uuid": "^1.4.8"
   }
 }
