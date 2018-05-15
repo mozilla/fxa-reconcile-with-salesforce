@@ -14,21 +14,27 @@ The FxA dump must contain uid, email, and locale
 
 The Salesforce dump must contain uid,email
 
-> 124516347fsdf2361425,stomlinson@mozilla.com,en_US
+> 124516347fsdf2361425,stomlinson@mozilla.com
 
-To write to stdout a summary of the commands that would be sent to SQS:
+To help check that the CSVs are parsed as expected, an intermediate JSON
+representation of the SQS commands to be sent is generated. This writes
+to stdout by default:
 
-> node bin/reconcile.js -f `<fxa_sorted.csv>` -s `<salesforce_sorted.csv>` -u https://sqs.com -r us-west-2 -j
+> node bin/csv-to-json.js -f `<fxa_sorted.csv>` -s `<salesforce_sorted.csv>`
 
-To write to stdout the full commands that would be sent to SQS:
+To save to a file:
 
-> node bin/reconcile.js -f `<fxa_sorted.csv>` -s `<salesforce_sorted.csv>` -u https://sqs.com -r us-west-2
+> node bin/csv-to-json.js -f `<fxa_sorted.csv>` -s `<salesforce_sorted.csv>` &gt; commands.json
 
-To send to SQS:
+To do a dry run and display the list of SQS commands that would be sent:
 
-> node bin/reconcile.js -f `<fxa_sorted.csv>` -s `<salesforce_sorted.csv>` -u `<target_sqs_url>` -r `<target_sqs_region>` --go
+> node bin/json-to-sqs.js -i `<commands_json>`
 
-To send to SQS, AWS credentials are expected to be available.
+To send to SQS, the target SQS endpoint and region must be specified:
+
+> node bin/json-to-sqs.js -i `<commands_json>` -u `<target_sqs_url>` -r `<target_sqs_region>`
+
+AWS credentials are expected to be available.
 See https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-node.html
 
 
