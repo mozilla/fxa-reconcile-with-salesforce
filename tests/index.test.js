@@ -37,6 +37,7 @@ test('errors are propagated to the errorStream', () => {
 
 test('create delegates to writer.create', () => {
   readerMock.emit('create', {
+    createDate: '2018-05-18T11:52:10.154Z',
     email: 'email',
     locale: 'locale',
     timestamp: 'timestamp',
@@ -44,7 +45,7 @@ test('create delegates to writer.create', () => {
   });
 
   expect(writerMock.create).toHaveBeenCalledTimes(1);
-  expect(writerMock.create).toBeCalledWith('uid', 'email', 'locale', 'timestamp');
+  expect(writerMock.create).toBeCalledWith('uid', 'email', 'locale', 'timestamp', '2018-05-18T11:52:10.154Z');
 });
 
 test('update delegates to writer.update', () => {

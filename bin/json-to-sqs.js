@@ -42,7 +42,7 @@ if (program.url && program.region) {
 } else {
   output = new StdoutOutput();
 }
-writer = new SQSWriter(program.url, output, program.ts);
+writer = new SQSWriter(program.url, output);
 
 const reconciler = new ReconciliationManager(reader, writer);
 reconciler.run();

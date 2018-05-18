@@ -8,9 +8,9 @@ Salesforce instance.
 Two database dumps in CSV format are needed. Both dumps need to be stripped of
 leading and trailing whitespace, contain no blank lines, and sorted by uid.
 
-The FxA dump must contain uid, email, and locale
+The FxA dump must contain uid, email, locale, and create_date
 
-> 124516347fsdf2361425,stomlinson@mozilla.com,en_US
+> 124516347fsdf2361425,stomlinson@mozilla.com,en_US,2018-05-18T11:52:10.154Z
 
 The Salesforce dump must contain uid,email
 
@@ -37,6 +37,21 @@ To send to SQS, the target SQS endpoint and region must be specified:
 AWS credentials are expected to be available.
 See https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-node.html
 
+## Preparing the Salesforce data
+
+The Salesforce data comes in a UTF-16 CSV with the following format:
+
+> CREATED_DATE_,EMAIL_ADDRESS_,FXA_ID,FXA_LANGUAGE_ISO2
+
+This needs to be converted to a UTF-8 file with the following format:
+
+> FXA_ID,EMAIL
+
+Standard unix commands can take care of the prep work:
+
+1. `iconv -f utf-16 -t utf-8 <salesforce.original.utf16.csv> > <salesforce.original.utf8.csv>` - converts UTF-16 to UTF-8, creating an output file of half the size.
+2. `tail -n +2 <salesforce.original.utf8.csv> | cut -d , -f 3,2 | perl -pe 's/^(\S+),(\S+)/$2,$1/;' > <salesforce.correct_columns.unsorted.csv>` - Ditch the schema line, extract and output one `UID,email` per line
+3. `sort <salesforce.correct_columns.unsorted.csv> > <salesforce.sorted.csv>` - Sort the CSV by UID.
 
 ## Architecture
 

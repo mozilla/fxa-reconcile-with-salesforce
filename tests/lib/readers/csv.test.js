@@ -18,14 +18,21 @@ beforeEach(() => {
   };
 });
 
-it('emits the expected number of events', () => {
+test('emits the expected number of events', () => {
   return new Promise((resolve, reject) => {
-    csvReader.on('complete', () => {
+    csvReader.on('complete', (completeCounts) => {
       resolve((() => {
-        // These numbers came from the data generator.
-        expect(counts.create).toBe(197);
-        expect(counts.update).toBe(65);
-        expect(counts.delete).toBe(674);
+        // Counts came from the data generator.
+        expect(counts.create).toBe(1087);
+        expect(completeCounts.create).toBe(1087);
+
+        expect(counts.update).toBe(72);
+        expect(completeCounts.update).toBe(72);
+
+        expect(counts.delete).toBe(46);
+        expect(completeCounts.delete).toBe(46);
+
+        expect(completeCounts.ignore).toBe(2795);
       })());
     });
 
@@ -35,4 +42,21 @@ it('emits the expected number of events', () => {
 
     csvReader.run();
   });
+});
+
+
+test('_splitLineBuffer, splits, trims', () => {
+  const buffer = new Buffer('  uid,  email ,locale  ,createDate   ');
+  expect(csvReader._splitLineBuffer(buffer)).toEqual([
+    'uid',
+    'email',
+    'locale',
+    'createDate'
+  ]);
+});
+
+test('_splitLineBuffer returns ["zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"] if no buffer', () => {
+  expect(csvReader._splitLineBuffer()).toEqual([
+    'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
+  ]);
 });
