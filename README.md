@@ -53,6 +53,10 @@ Standard unix commands can take care of the prep work:
 2. `tail -n +2 <salesforce.original.utf8.csv> | cut -d , -f 3,2 | perl -pe 's/^(\S+),(\S+)/$2,$1/;' > <salesforce.correct_columns.unsorted.csv>` - Ditch the schema line, extract and output one `UID,email` per line
 3. `sort <salesforce.correct_columns.unsorted.csv> > <salesforce.sorted.csv>` - Sort the CSV by UID.
 
+## Allowing for more nodejs memory, if needed 
+
+> node bin/csv-to-json.js --max-old-space-size=8192 -f `<fxa_sorted.csv>` -s `<salesforce_sorted.csv>`
+
 ## Architecture
 
 * `lib/readers` contains logic to read .csv and .diff files and emit `create`, `update` and `delete` events based their contents.
