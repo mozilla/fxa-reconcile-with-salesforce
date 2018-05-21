@@ -24,20 +24,20 @@ test('emits the expected number of events', () => {
     csvReader.on('complete', (completeCounts) => {
       resolve((() => {
         // Counts came from the data generator.
-        expect(counts.create).toBe(1087);
-        expect(completeCounts.create).toBe(1087);
+        expect(counts.create).toBe(1080);
+        expect(completeCounts.create).toBe(1080);
 
-        expect(counts.update).toBe(72);
-        expect(completeCounts.update).toBe(72);
+        expect(counts.update).toBe(79);
+        expect(completeCounts.update).toBe(79);
 
-        expect(counts.delete).toBe(46);
-        expect(completeCounts.delete).toBe(46);
+        expect(counts.delete).toBe(42);
+        expect(completeCounts.delete).toBe(42);
 
-        expect(completeCounts.stats.sum).toBe('1205.00');
-        expect(completeCounts.stats.mean).toBe('75.31');
-        expect(completeCounts.stats.stddev).toBe('9.03');
+        expect(completeCounts.stats.sum).toBe('1201.00');
+        expect(completeCounts.stats.mean).toBe('75.06');
+        expect(completeCounts.stats.stddev).toBe('8.63');
 
-        expect(completeCounts.ignore).toBe(2795);
+        expect(completeCounts.ignore).toBe(2799);
       })());
     });
 
@@ -49,7 +49,6 @@ test('emits the expected number of events', () => {
     csvReader.run();
   });
 });
-
 
 test('_splitLineBuffer, splits, trims', () => {
   const buffer = new Buffer('  uid,  email ,locale  ,createDate   ');
@@ -87,4 +86,9 @@ test('_splitLineBuffer returns ["zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"] if n
   expect(csvReader._splitLineBuffer()).toEqual([
     'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
   ]);
+});
+
+test('_normalizeCSVDate converts a string to a date', () => {
+  let date = csvReader._normalizeCSVDate('1473453024553');
+  expect(date.getTime()).toBe(1473453024553);
 });

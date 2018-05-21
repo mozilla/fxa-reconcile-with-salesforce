@@ -10,7 +10,9 @@ leading and trailing whitespace, contain no blank lines, and sorted by uid.
 
 The FxA dump must contain uid, email, locale, and create_date
 
-> 124516347fsdf2361425,stomlinson@mozilla.com,en_US,2018-05-18T11:52:10.154Z
+> 124516347fsdf2361425,stomlinson@mozilla.com,en_US,1526933232113
+
+`create_date` is milliseconds since the Unix epoch.
 
 The Salesforce dump must contain uid,email
 
@@ -53,7 +55,7 @@ Standard unix commands can take care of the prep work:
 2. `tail -n +2 <salesforce.original.utf8.csv> | cut -d , -f 3,2 | perl -pe 's/^(\S+),(\S+)/$2,$1/;' > <salesforce.correct_columns.unsorted.csv>` - Ditch the schema line, extract and output one `UID,email` per line
 3. `sort <salesforce.correct_columns.unsorted.csv> > <salesforce.sorted.csv>` - Sort the CSV by UID.
 
-## Allowing for more nodejs memory, if needed 
+## Allowing for more nodejs memory, if needed
 
 > node bin/csv-to-json.js --max-old-space-size=8192 -f `<fxa_sorted.csv>` -s `<salesforce_sorted.csv>`
 
