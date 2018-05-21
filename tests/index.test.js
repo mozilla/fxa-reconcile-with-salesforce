@@ -24,8 +24,19 @@ beforeEach(() => {
   manager = new ReconciliationManager(readerMock, writerMock, errorStreamMock);
 });
 
-test('errors are propagated to the errorStream', () => {
+test('writer errors are propagated to the errorStream', () => {
   writerMock.emit('error', {
+    message: 'this is the error message',
+    data: { key: 'value' }
+  });
+
+  expect(errorStreamMock.write).toHaveBeenCalledTimes(1);
+  let writeArg = errorStreamMock.write.mock.calls[0][0];
+  expect(writeArg).toContain(JSON.stringify({key: 'value'}));
+});
+
+test('reader errors are propagated to the errorStream', () => {
+  readerMock.emit('error', {
     message: 'this is the error message',
     data: { key: 'value' }
   });
