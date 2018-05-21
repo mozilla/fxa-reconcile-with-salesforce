@@ -15,6 +15,7 @@ beforeEach(() => {
     create: 0,
     update: 0,
     delete: 0,
+    error: 0
   };
 });
 
@@ -32,6 +33,10 @@ test('emits the expected number of events', () => {
         expect(counts.delete).toBe(46);
         expect(completeCounts.delete).toBe(46);
 
+        expect(completeCounts.stats.sum).toBe('1205.00');
+        expect(completeCounts.stats.mean).toBe('75.31');
+        expect(completeCounts.stats.stddev).toBe('9.03');
+
         expect(completeCounts.ignore).toBe(2795);
       })());
     });
@@ -39,6 +44,7 @@ test('emits the expected number of events', () => {
     csvReader.on('create', () => counts.create++);
     csvReader.on('update', () => counts.update++);
     csvReader.on('delete', () => counts.delete++);
+    csvReader.on('error', () => counts.error++);
 
     csvReader.run();
   });
