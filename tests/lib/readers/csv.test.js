@@ -61,6 +61,28 @@ test('_splitLineBuffer, splits, trims', () => {
   ]);
 });
 
+
+test('_splitLineBuffer, splits, trims and handles optional double-quoting', () => {
+  const buffer = new Buffer('  uid,  email , " locale "  ,createDate   ');
+  expect(csvReader._splitLineBuffer(buffer)).toEqual([
+    'uid',
+    'email',
+    ' locale ',
+    'createDate'
+  ]);
+});
+
+test('_splitLineBuffer, splits, trims and handles optional double-quoting of empty string', () => {
+  const buffer = new Buffer('  uid,  email , ""  ,createDate   ');
+  expect(csvReader._splitLineBuffer(buffer)).toEqual([
+    'uid',
+    'email',
+    '',
+    'createDate'
+  ]);
+});
+
+
 test('_splitLineBuffer returns ["zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"] if no buffer', () => {
   expect(csvReader._splitLineBuffer()).toEqual([
     'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
