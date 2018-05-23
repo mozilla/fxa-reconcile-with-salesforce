@@ -24,6 +24,7 @@ const percentCreate = parseInt(program.pc || '10');
 const percentUpdate = parseInt(program.pu || '5');
 const percentDelete = parseInt(program.pd || '10');
 
+
 const fxaWriter = createFxaWriter(program);
 const salesforceWriter = createSalesforceWriter(program);
 generate(count, percentCreate, percentDelete, percentUpdate, fxaWriter, salesforceWriter)
@@ -44,13 +45,28 @@ async function generate(count, percentCreate, percentDelete, percentUpdate, fxaS
   };
   const msSinceUnixEpoch = (new Date()).getTime();
 
+  const TEST_LOCALES = [
+    'en',
+    'en-US',
+    'fr',
+    'de',
+    'es',
+    'es-ES',
+    'es-AR',
+    '"en,en-US"',
+    '"de-de,de,en,en-us,en-au,de-informal,fr-fr,fr,de-ch"',
+    //'"de-de,de,en,en-us,en-au,de-informal,fr-fr,fr,de-ch,en-gb,de-formal,ja-jp,ja,en-ie,en_en.utf-8,en_en.utf,de_de.utf-8,de_de.utf,en-us-x-hixie,ru-ru,ru,bg-bg,bg,nl-nl,nl,en-zz,sv-se,sv,\\"en-us\\",\\"en,pt-pt,pt,it-it,it,fi-x-mtfrom-de,fi,uk-ua,uk,pl-pl,pl"',
+    '\u00DE'
+  ];
+
   for (let i = 0; i < count; ++i) {
     const uid = uuid.v4().replace(/-/g, '');
     const number = Math.floor(Math.random() * 100);
+    const locale = TEST_LOCALES[i % TEST_LOCALES.length];
 
     if (number < percentCreate) {
       // Creates only exist in FxA database.
-      await write(fxaStream, `${uid},${uid}@fxa.com,en,${msSinceUnixEpoch}\n`);
+      await write(fxaStream, `${uid},${uid}@fxa.com,${locale},${msSinceUnixEpoch}\n`);
       counts.create++;
     } else if (number < deleteMax) {
       // Deletes only exist in Salesforce database.
@@ -58,12 +74,12 @@ async function generate(count, percentCreate, percentDelete, percentUpdate, fxaS
       counts.delete++;
     } else if (number < changeMax) {
       // Changes exist in both DBs, use FxA as canonical source.
-      await write(fxaStream, `${uid},${uid}@changed.com,en,${msSinceUnixEpoch}\n`);
+      await write(fxaStream, `${uid},${uid}@changed.com,${locale},${msSinceUnixEpoch}\n`);
       await write(salesforceStream, `${uid},${uid}@original.com\n`);
       counts.update++;
     } else {
       // Entry exists in both DBs
-      await write(fxaStream, `${uid},${uid}@same.com,en,${msSinceUnixEpoch}\n`);
+      await write(fxaStream, `${uid},${uid}@same.com,${locale},${msSinceUnixEpoch}\n`);
       await write(salesforceStream, `${uid},${uid}@same.com\n`);
       counts.both++;
     }
