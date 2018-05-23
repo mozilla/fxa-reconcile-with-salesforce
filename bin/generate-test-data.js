@@ -42,7 +42,7 @@ async function generate(count, percentCreate, percentDelete, percentUpdate, fxaS
     delete: 0,
     both: 0,
   };
-  const isoDate = (new Date()).toISOString();
+  const msSinceUnixEpoch = (new Date()).getTime();
 
   for (let i = 0; i < count; ++i) {
     const uid = uuid.v4().replace(/-/g, '');
@@ -50,7 +50,7 @@ async function generate(count, percentCreate, percentDelete, percentUpdate, fxaS
 
     if (number < percentCreate) {
       // Creates only exist in FxA database.
-      await write(fxaStream, `${uid},${uid}@fxa.com,en,${isoDate}\n`);
+      await write(fxaStream, `${uid},${uid}@fxa.com,en,${msSinceUnixEpoch}\n`);
       counts.create++;
     } else if (number < deleteMax) {
       // Deletes only exist in Salesforce database.
@@ -58,12 +58,12 @@ async function generate(count, percentCreate, percentDelete, percentUpdate, fxaS
       counts.delete++;
     } else if (number < changeMax) {
       // Changes exist in both DBs, use FxA as canonical source.
-      await write(fxaStream, `${uid},${uid}@changed.com,en,${isoDate}\n`);
+      await write(fxaStream, `${uid},${uid}@changed.com,en,${msSinceUnixEpoch}\n`);
       await write(salesforceStream, `${uid},${uid}@original.com\n`);
       counts.update++;
     } else {
       // Entry exists in both DBs
-      await write(fxaStream, `${uid},${uid}@same.com,en,${isoDate}\n`);
+      await write(fxaStream, `${uid},${uid}@same.com,en,${msSinceUnixEpoch}\n`);
       await write(salesforceStream, `${uid},${uid}@same.com\n`);
       counts.both++;
     }
