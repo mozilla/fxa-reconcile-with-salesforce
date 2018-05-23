@@ -59,6 +59,28 @@ Standard unix commands can take care of the prep work:
 
 > node bin/csv-to-json.js --max-old-space-size=8192 -f `<fxa_sorted.csv>` -s `<salesforce_sorted.csv>`
 
+## Generating test data
+Test data can be generated:
+
+> node ./bin/generate-test-data.js -f ./test_data/fxa.csv -s ./test_data/salesforce.csv -c 4000 --pc 27 --pu 2 --pd 1
+
+This would generate a total of 4000 rows, 27% creates, 2% updates, 1% deletions, saved to test_data/fxa.csv and test_data/salesforce.csv
+
+* `-c, --count <count>`          Total record count
+* `-f, --fxa [filename]`         FxA CSV
+* `-s, --salesforce [filename]`  Salesforce CSV
+* `--pc [percentage]`            % of accounts that need to be created on Salesforce, defaults to 10%
+* `--pu [percentage]`            % of accounts that need to be updated on Salesforce, defaults to 5%
+* `--pd [percentage]`            % of accounts that need to be deleted on Salesforce, defaults to 10%
+
+Output files are *unsorted*. The generated uid for each line is random and sorting in
+the generation script is prohibitively expensive for large datasets. The best tool
+to sort the output is the Unix `sort` command:
+
+> sort fxa.csv > fxa_sorted.csv
+
+> sort salesforce.csv > salesforce_sorted.csv
+
 ## Architecture
 
 * `lib/readers` contains logic to read .csv and .diff files and emit `create`, `update` and `delete` events based their contents.
