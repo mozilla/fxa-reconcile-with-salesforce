@@ -6,14 +6,12 @@ const path = require('path');
 const program = require('commander');
 
 const CSVReader = require('../lib/readers/csv');
-const JSONWriter = require('../lib/writers/json');
+const JSONTransform = require('../lib/transforms/json');
 const ReconciliationManager = require('../lib/index');
-const StdoutOutput = require('../lib/output/stdout');
 
 program
   .option('-f, --fxa [filename]', 'FxA CSV, format expected to be `uid,email,locale`')
   .option('-s, --salesforce [filename]', 'Salesforce CSV, format expected to be `uid,email`')
-
 
 program.parse(process.argv);
 
@@ -29,15 +27,14 @@ if (! program.fxa || ! program.salesforce) {
 }
 
 
-let reader;
-if (program.fxa) {
-  const fxaInputPath = path.resolve(process.cwd(), program.fxa);
-  const salesforceInputPath = path.resolve(process.cwd(), program.salesforce);
-  reader = new CSVReader(fxaInputPath, salesforceInputPath, ',');
-}
+const fxaInputPath = path.resolve(process.cwd(), program.fxa);
+const salesforceInputPath = path.resolve(process.cwd(), program.salesforce);
+const reader = new CSVReader({
+  fxaInputPath,
+  salesforceInputPath,
+  separator: ','
+});
 
-const output = new StdoutOutput();
-const writer = new JSONWriter(output);
+reader.pipe(new JSONTransform({ suffix: '\n' })).pipe(process.stdout);
 
-const reconciler = new ReconciliationManager(reader, writer);
-reconciler.run();
+const reconciler = new ReconciliationManager(reader, process.stdout);
