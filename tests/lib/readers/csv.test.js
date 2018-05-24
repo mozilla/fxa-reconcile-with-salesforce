@@ -1,21 +1,28 @@
 const path = require('path');
 const CSVReader = require('../../../lib/readers/csv');
+const NullWriter = require('../../../lib/writers/null');
 
 let csvReader;
 let counts;
+let nullWriter;
 
 beforeEach(() => {
-  csvReader = new CSVReader(
-    path.join(__dirname, '..', '..', '..', 'test_data', 'fxa_sorted.csv'),
-    path.join(__dirname, '..', '..', '..', 'test_data', 'salesforce_sorted.csv'),
-    ','
-  );
+  csvReader = new CSVReader({
+    fxaInputPath: path.join(__dirname, '..', '..', '..', 'test_data', 'fxa_sorted.csv'),
+    salesforceInputPath: path.join(__dirname, '..', '..', '..', 'test_data', 'salesforce_sorted.csv'),
+    separator: ','
+  });
+
+  // the nullWriter is needed to ensure the reader's data queue
+  // does not fill up.
+  nullWriter = new NullWriter();
+  csvReader.pipe(nullWriter);
+  csvReader.on('error', () => {
+    counts.error++;
+  });
 
   counts = {
-    create: 0,
-    delete: 0,
     error: 0,
-    update: 0,
   };
 });
 
@@ -26,31 +33,16 @@ test('emits the expected number of events', () => {
     csvReader.on('complete', (completeCounts) => {
       resolve((() => {
         // Counts came from the data generator.
-        expect(counts.create).toBe(expected.create);
-        expect(completeCounts.create).toBe(expected.create);
-
-        expect(counts.delete).toBe(expected.delete);
-        expect(completeCounts.delete).toBe(expected.delete);
-
         expect(counts.error).toBe(expected.error);
-
-        expect(counts.update).toBe(expected.update);
+        expect(completeCounts.create).toBe(expected.create);
+        expect(completeCounts.delete).toBe(expected.delete);
+        expect(completeCounts.ignore).toBe(expected.ignore);
         expect(completeCounts.update).toBe(expected.update);
-
         expect(completeCounts.stats.sum).toBe(expected.stats.sum);
         expect(completeCounts.stats.mean).toBe(expected.stats.mean);
         expect(completeCounts.stats.stddev).toBe(expected.stats.stddev);
-
-        expect(completeCounts.ignore).toBe(expected.ignore);
       })());
     });
-
-    csvReader.on('create', () => counts.create++);
-    csvReader.on('delete', () => counts.delete++);
-    csvReader.on('error', () => counts.error++);
-    csvReader.on('update', () => counts.update++);
-
-    csvReader.run();
   });
 });
 

@@ -7,8 +7,8 @@ const path = require('path');
 const program = require('commander');
 const uuid = require('node-uuid');
 
-const StdOutOutput = require('../lib/output/stdout');
 const { updateBucketStats, calculateBucketDistribution } = require('../lib/statistics');
+const PrefixSuffixTransform = require('../lib/transforms/prefix-suffix');
 
 program
   .option('-c, --count <count>', 'Total record count')
@@ -121,7 +121,9 @@ function write(outputStream, contents) {
 
 function createFxaWriter (program) {
   if (! program.fxa) {
-    return new StdOutOutput('fxa       : ', '\n');
+    const transform = new PrefixSuffixTransform({ prefix: 'fxa       : ', suffix: '\n' });
+    transform.pipe(process.stdout);
+    return transform;
   } else {
     const outputPath = path.resolve(process.cwd(), program.fxa);
     return fs.createWriteStream(outputPath);
@@ -129,7 +131,9 @@ function createFxaWriter (program) {
 }
 function createSalesforceWriter (program) {
   if (! program.salesforce) {
-    return new StdOutOutput('salesforce: ', '\n');
+    const transform = new PrefixSuffixTransform({ prefix: 'salesforce: ', suffix: '\n'});
+    transform.pipe(process.stdout);
+    return transform;
   } else {
     const outputPath = path.resolve(process.cwd(), program.salesforce);
     return fs.createWriteStream(outputPath);

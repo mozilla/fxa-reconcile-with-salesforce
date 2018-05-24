@@ -86,11 +86,11 @@ You can run `./bin/regenerate-testdata.sh` to do the above. Use those `Counts` t
 
 ## Architecture
 
-* `lib/readers` contains logic to read .csv and .diff files and emit `create`, `update` and `delete` events based their contents.
-* `lib/writers` contains logic to create an SQS or JSON summary message and send it to an output stream.
-* `lib/output` contains logic to send messages to SQS or stdout.
+Everything is based on [NodeJS Streams](https://nodejs.org/api/stream.html)
 
-A Reader reads the input file and emits when an update is needed to the Salesforce DB. These events are listened for by a ReconciliationManager that forwards the events to a Writer. The Writer creates a formatted message for the event and writes it to an Output.
+* `lib/readers` contains logic to read .csv and .diff files. A JSON blob with the event will be pushed onto the stream queue for each entry in the input file.
+* `lib/transforms` contains logic to transform the JSON blob from the reader into a message suitable for output. The transformed message is pushed onto the stream queue for further transformation or output.
+* `lib/writers` contains logic to send messages to SQS.
 
 This architecture allows us to read multiple types of files as well as perform manual verification of the parsing and message format.
 
