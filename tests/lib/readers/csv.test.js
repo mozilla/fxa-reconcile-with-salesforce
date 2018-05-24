@@ -13,74 +13,71 @@ beforeEach(() => {
 
   counts = {
     create: 0,
-    update: 0,
     delete: 0,
-    error: 0
+    error: 0,
+    update: 0,
   };
 });
 
 test('emits the expected number of events', () => {
+  const expected = {
+    create: 1078,
+    delete: 40,
+    error: 49,
+    ignore: 2772,
+    update: 61,
+    stats: {
+      sum: '1179.00',
+      mean: '73.69',
+      stddev: '9.09'
+    }
+  }
+
   return new Promise((resolve, reject) => {
     csvReader.on('complete', (completeCounts) => {
       resolve((() => {
         // Counts came from the data generator.
-        expect(counts.create).toBe(1080);
-        expect(completeCounts.create).toBe(1080);
+        expect(counts.create).toBe(expected.create);
+        expect(completeCounts.create).toBe(expected.create);
 
-        expect(counts.update).toBe(79);
-        expect(completeCounts.update).toBe(79);
+        expect(counts.delete).toBe(expected.delete);
+        expect(completeCounts.delete).toBe(expected.delete);
 
-        expect(counts.delete).toBe(42);
-        expect(completeCounts.delete).toBe(42);
+        expect(counts.error).toBe(expected.error);
 
-        expect(completeCounts.stats.sum).toBe('1201.00');
-        expect(completeCounts.stats.mean).toBe('75.06');
-        expect(completeCounts.stats.stddev).toBe('8.63');
+        expect(counts.update).toBe(expected.update);
+        expect(completeCounts.update).toBe(expected.update);
 
-        expect(completeCounts.ignore).toBe(2799);
+        expect(completeCounts.stats.sum).toBe(expected.stats.sum);
+        expect(completeCounts.stats.mean).toBe(expected.stats.mean);
+        expect(completeCounts.stats.stddev).toBe(expected.stats.stddev);
+
+        expect(completeCounts.ignore).toBe(expected.ignore);
       })());
     });
 
     csvReader.on('create', () => counts.create++);
-    csvReader.on('update', () => counts.update++);
     csvReader.on('delete', () => counts.delete++);
     csvReader.on('error', () => counts.error++);
+    csvReader.on('update', () => counts.update++);
 
     csvReader.run();
   });
 });
 
-test('_splitLineBuffer, splits, trims', () => {
-  const buffer = new Buffer('  uid,  email ,locale  ,createDate   ');
-  expect(csvReader._splitLineBuffer(buffer)).toEqual([
+test('_splitLineBuffer, splits, trims and base64-decodes email and locale', () => {
+  const email = 'someone@example.com';
+  const locale = 'en-US,en;q=0.9';
+  const base64email = Buffer.from(email, 'utf8').toString('base64');
+  const base64locale = Buffer.from(locale, 'utf8').toString('base64');
+  const buffer = new Buffer(` uid,  ${base64email} ,  ${base64locale},createDate `);
+  expect(csvReader._splitLineBuffer(buffer, 'fxa')).toEqual([
     'uid',
-    'email',
-    'locale',
+    email,
+    locale,
     'createDate'
   ]);
 });
-
-
-test('_splitLineBuffer, splits, trims and handles optional double-quoting', () => {
-  const buffer = new Buffer('  uid,  email , " locale "  ,createDate   ');
-  expect(csvReader._splitLineBuffer(buffer)).toEqual([
-    'uid',
-    'email',
-    ' locale ',
-    'createDate'
-  ]);
-});
-
-test('_splitLineBuffer, splits, trims and handles optional double-quoting of empty string', () => {
-  const buffer = new Buffer('  uid,  email , ""  ,createDate   ');
-  expect(csvReader._splitLineBuffer(buffer)).toEqual([
-    'uid',
-    'email',
-    '',
-    'createDate'
-  ]);
-});
-
 
 test('_splitLineBuffer returns ["zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"] if no buffer', () => {
   expect(csvReader._splitLineBuffer()).toEqual([
