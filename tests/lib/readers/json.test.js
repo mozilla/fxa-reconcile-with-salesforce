@@ -20,17 +20,17 @@ test('emits the expected number of events', () => {
   return new Promise((resolve, reject) => {
     jsonReader.on('complete', (completeCounts) => {
       resolve((() => {
-        expect(completeCounts.lines).toBe(1201);
+        expect(completeCounts.lines).toBe(1216);
 
         // Counts came from the data generator.
-        expect(counts.create).toBe(1080);
-        expect(completeCounts.create).toBe(1080);
+        expect(counts.create).toBe(1103);
+        expect(completeCounts.create).toBe(1103);
 
-        expect(counts.update).toBe(79);
-        expect(completeCounts.update).toBe(79);
+        expect(counts.update).toBe(76);
+        expect(completeCounts.update).toBe(76);
 
-        expect(counts.delete).toBe(42);
-        expect(completeCounts.delete).toBe(42);
+        expect(counts.delete).toBe(37);
+        expect(completeCounts.delete).toBe(37);
       })());
     });
 

@@ -21,15 +21,15 @@ beforeEach(() => {
 
 test('emits the expected number of events', () => {
   const expected = {
-    create: 1078,
-    delete: 40,
-    error: 49,
-    ignore: 2772,
-    update: 61,
+    create: 1103,
+    delete: 37,
+    error: 43,
+    ignore: 2741,
+    update: 76,
     stats: {
-      sum: '1179.00',
-      mean: '73.69',
-      stddev: '9.09'
+      sum: '1216.00',
+      mean: '76.00',
+      stddev: '7.52'
     }
   }
 
@@ -65,16 +65,14 @@ test('emits the expected number of events', () => {
   });
 });
 
-test('_splitLineBuffer, splits, trims and base64-decodes email and locale', () => {
-  const email = 'someone@example.com';
-  const locale = 'en-US,en;q=0.9';
-  const base64email = Buffer.from(email, 'utf8').toString('base64');
-  const base64locale = Buffer.from(locale, 'utf8').toString('base64');
+test('_splitLineBuffer, splits, trims', () => {
+  const base64email = utf8ToBase64('someone@example.com');
+  const base64locale = utf8ToBase64('en-US,en;q=0.9');
   const buffer = new Buffer(` uid,  ${base64email} ,  ${base64locale},createDate `);
-  expect(csvReader._splitLineBuffer(buffer, 'fxa')).toEqual([
+  expect(csvReader._splitLineBuffer(buffer)).toEqual([
     'uid',
-    email,
-    locale,
+    base64email,
+    base64locale,
     'createDate'
   ]);
 });
@@ -89,3 +87,34 @@ test('_normalizeCSVDate converts a string to a date', () => {
   let date = csvReader._normalizeCSVDate('1473453024553');
   expect(date.getTime()).toBe(1473453024553);
 });
+
+test('_normalizeFxaCSVLocale trims locale', () => {
+  expect(csvReader._normalizeFxaCSVLocale(utf8ToBase64('en'))).toBe('en');
+  expect(csvReader._normalizeFxaCSVLocale(utf8ToBase64('  en  '))).toBe('en');
+  expect(csvReader._normalizeFxaCSVLocale(utf8ToBase64('  en,en-US  '))).toBe('en,en-US');
+});
+
+test('_normalizeFxaCSVEmail trims email', () => {
+  expect(csvReader._normalizeFxaCSVEmail(utf8ToBase64('someone@someone.com'))).toBe('someone@someone.com');
+  expect(csvReader._normalizeFxaCSVEmail(utf8ToBase64(' someone@someone.com '))).toBe('someone@someone.com');
+});
+
+test('_parseFxaLine parses the line, normalizes input', () => {
+  const lineData = csvReader._parseFxaLine(new Buffer(`UID,${utf8ToBase64('testuser@testuser.com')},${utf8ToBase64('en-US ')} , 1527087211213`), 1527087211210);
+  expect(lineData.createDate).toEqual(new Date(1527087211213));
+  expect(lineData.email).toBe('testuser@testuser.com');
+  expect(lineData.locale).toBe('en-US');
+  expect(lineData.timestamp).toBe(1527087211210);
+  expect(lineData.uid).toBe('UID');
+});
+
+test('_parseSalesforceLine parses the line, normalizes input', () => {
+  const lineData = csvReader._parseSalesforceLine(new Buffer('UID,Email'), 1527087211210);
+  expect(lineData.email).toBe('Email');
+  expect(lineData.timestamp).toBe(1527087211210);
+  expect(lineData.uid).toBe('UID');
+});
+
+function utf8ToBase64 (str) {
+  return Buffer.from(str, 'utf8').toString('base64');
+}
