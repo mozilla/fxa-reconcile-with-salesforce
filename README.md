@@ -8,9 +8,9 @@ Salesforce instance.
 Two database dumps in CSV format are needed. Both dumps need to be stripped of
 leading and trailing whitespace, contain no blank lines, and sorted by uid.
 
-The FxA dump must contain uid, email, locale, and create_date
+The FxA dump must contain uid, base64(email), base64(locale), and create_date
 
-> 124516347fsdf2361425,stomlinson@mozilla.com,en_US,1526933232113
+> 124516347fsdf2361425,base64('stomlinson@mozilla.com'),base64('en_US'),1526933232113
 
 `create_date` is milliseconds since the Unix epoch.
 
@@ -55,16 +55,16 @@ Standard unix commands can take care of the prep work:
 2. `tail -n +2 <salesforce.original.utf8.csv> | cut -d , -f 3,2 | perl -pe 's/^(\S+),(\S+)/$2,$1/;' > <salesforce.correct_columns.unsorted.csv>` - Ditch the schema line, extract and output one `UID,email` per line
 3. `sort <salesforce.correct_columns.unsorted.csv> > <salesforce.sorted.csv>` - Sort the CSV by UID.
 
-## Allowing for more nodejs memory, if needed
+## Allowing for more nodejs memory, if needed. Recommended.
 
 > node bin/csv-to-json.js --max-old-space-size=8192 -f `<fxa_sorted.csv>` -s `<salesforce_sorted.csv>`
 
 ## Generating test data
 Test data can be generated:
 
-> node ./bin/generate-test-data.js -f ./test_data/fxa.csv -s ./test_data/salesforce.csv -c 4000 --pc 27 --pu 2 --pd 1
+> node ./bin/generate-test-data.js -f ./test_data/fxa.csv -s ./test_data/salesforce.csv -c 4000 --pc 27 --pu 2 --pd 1 --pi 1
 
-This would generate a total of 4000 rows, 27% creates, 2% updates, 1% deletions, saved to test_data/fxa.csv and test_data/salesforce.csv
+This would generate a total of 4000 rows, 27% creates, 2% updates, 1% deletions, 1% invalid uid saved to test_data/fxa.csv and test_data/salesforce.csv
 
 * `-c, --count <count>`          Total record count
 * `-f, --fxa [filename]`         FxA CSV
@@ -72,6 +72,7 @@ This would generate a total of 4000 rows, 27% creates, 2% updates, 1% deletions,
 * `--pc [percentage]`            % of accounts that need to be created on Salesforce, defaults to 10%
 * `--pu [percentage]`            % of accounts that need to be updated on Salesforce, defaults to 5%
 * `--pd [percentage]`            % of accounts that need to be deleted on Salesforce, defaults to 10%
+* `--pi [percentage]`            % of accounts that have an invalid uid from either source, defaults to 1%
 
 Output files are *unsorted*. The generated uid for each line is random and sorting in
 the generation script is prohibitively expensive for large datasets. The best tool
@@ -80,6 +81,8 @@ to sort the output is the Unix `sort` command:
 > sort fxa.csv > fxa_sorted.csv
 
 > sort salesforce.csv > salesforce_sorted.csv
+
+You can run `./bin/regenerate-testdata.sh` to do the above. Use those `Counts` to update `expected` in `./tests/lib/readers/csv.test.js`.
 
 ## Architecture
 
