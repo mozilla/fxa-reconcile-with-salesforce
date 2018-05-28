@@ -1,0 +1,13 @@
+{
+  "ignore": 2806,
+  "create": 1034,
+  "delete": 52,
+  "error": 44,
+  "update": 64,
+  "stats": {
+    "sum": "1150.00",
+    "mean": "71.88",
+    "stddev": "8.41"
+  },
+  "total": 4000
+}

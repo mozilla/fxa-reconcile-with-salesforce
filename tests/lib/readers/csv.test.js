@@ -20,18 +20,7 @@ beforeEach(() => {
 });
 
 test('emits the expected number of events', () => {
-  const expected = {
-    create: 1103,
-    delete: 37,
-    error: 43,
-    ignore: 2741,
-    update: 76,
-    stats: {
-      sum: '1216.00',
-      mean: '76.00',
-      stddev: '7.52'
-    }
-  }
+  const expected = require('../../../test_data/expected.json');
 
   return new Promise((resolve, reject) => {
     csvReader.on('complete', (completeCounts) => {

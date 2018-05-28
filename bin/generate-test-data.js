@@ -8,11 +8,13 @@ const program = require('commander');
 const uuid = require('node-uuid');
 
 const StdOutOutput = require('../lib/output/stdout');
+const { updateBucketStats, calculateBucketDistribution } = require('../lib/statistics');
 
 program
   .option('-c, --count <count>', 'Total record count')
   .option('-f, --fxa [filename]', 'FxA CSV')
   .option('-s, --salesforce [filename]', 'Salesforce CSV')
+  .option('-e, --expected [filename]', 'Expected test counts')
   .option('--pc [percentage]', '% of accounts that need to be created on Salesforce, defaults to 10%')
   .option('--pu [percentage]', '% of accounts that need to be updated on Salesforce, defaults to 5%')
   .option('--pd [percentage]', '% of accounts that need to be deleted on Salesforce, defaults to 10%')
@@ -30,9 +32,13 @@ const fxaWriter = createFxaWriter(program);
 const salesforceWriter = createSalesforceWriter(program);
 generate(count, percentCreate, percentDelete, percentUpdate, percentInvalidUid, fxaWriter, salesforceWriter)
   .then((counts) => {
-    let total = counts.both + counts.create + counts.update + counts.delete + counts.invalidUid;
+    let total = counts.ignore + counts.create + counts.update + counts.delete + counts.error;
     counts.total = total;
-    console.log('Counts:\n', JSON.stringify(counts, null, 2));
+    const expected = JSON.stringify(counts, null, 2);
+    console.log('Counts:\n', expected);
+    if (program.expected) {
+      fs.writeFileSync(path.resolve(process.cwd(), program.expected), expected)
+    }
   });
 
 async function generate(count, percentCreate, percentDelete, percentUpdate, percentInvalidUid, fxaStream, salesforceStream) {
@@ -40,10 +46,10 @@ async function generate(count, percentCreate, percentDelete, percentUpdate, perc
   const changeMax = deleteMax + percentUpdate;
   const invalidUidMax = changeMax + percentInvalidUid;
   const counts = {
-    both: 0,
+    ignore: 0,
     create: 0,
     delete: 0,
-    invalidUid: 0,
+    error: 0,
     update: 0,
   };
   const msSinceUnixEpoch = (new Date()).getTime();
@@ -56,16 +62,19 @@ async function generate(count, percentCreate, percentDelete, percentUpdate, perc
       // Creates only exist in FxA database.
       const email = base64(`${uid}@fxa.com`);
       const locale = base64('en');
+      updateBucketStats(uid);
       await write(fxaStream, `${uid},${email},${locale},${msSinceUnixEpoch}\n`);
       counts.create++;
     } else if (number < deleteMax) {
       // Deletes only exist in Salesforce database.
+      updateBucketStats(uid);
       await write(salesforceStream, `${uid},${uid}@salesforce.com\n`);
       counts.delete++;
     } else if (number < changeMax) {
       // Changes exist in both DBs, use FxA as canonical source.
       const email = base64(`${uid}@changed.com`);
       const locale = base64('en');
+      updateBucketStats(uid);
       await write(fxaStream, `${uid},${email},${locale},${msSinceUnixEpoch}\n`);
       await write(salesforceStream, `${uid},${uid}@original.com\n`);
       counts.update++;
@@ -79,17 +88,18 @@ async function generate(count, percentCreate, percentDelete, percentUpdate, perc
       } else {
         await write(salesforceStream, `${invalidUid},${uid}@invaliduid.com\n`);
       }
-      counts.invalidUid++;
+      counts.error++;
     } else {
-      // Entry exists in both DBs
+      // Entry exists in both DBs. Do nothing.
       const email = base64(`${uid}@same.com`);
       const locale = base64('en');
       await write(fxaStream, `${uid},${email},${locale},${msSinceUnixEpoch}\n`);
       await write(salesforceStream, `${uid},${uid}@same.com\n`);
-      counts.both++;
+      counts.ignore++;
     }
   }
 
+  counts.stats = calculateBucketDistribution();
   return counts;
 }
 
