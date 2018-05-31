@@ -11,22 +11,45 @@ beforeEach(() => {
   sqsMock = {
     sendMessage: jest.fn(function (message, callback) {
       callback(null);
+    }),
+
+    sendMessageBatch: jest.fn(function (params, callback) {
+      callback(null, { Successful: params.Entries });
     })
   };
 
   sqsWriter = new SQSWriter({
-    sqs: sqsMock
+    sqs: sqsMock,
+    queueUrl: 'http://sqs.queue.url'
   });
 });
 
 test('_write sends to SQS, calls the callback', () => {
-  const snsMessage = { key: 'value' };
-  const callbackMock = jest.fn();
+  const sqsMessage = { key: 'value' };
+  return new Promise((resolve, reject) => {
+    sqsWriter._write(sqsMessage, null, resolve);
+  })
+  .then(() => {
+    expect(sqsMock.sendMessage).toHaveBeenCalledTimes(1);
+    expect(sqsMock.sendMessage.mock.calls[0][0]).toEqual(sqsMessage);
+  });
+});
 
-  sqsWriter._write(snsMessage, null, callbackMock);
+test('_writev sends a batch to SQS, calls the callback', () => {
+  const sqsMessages = [];
+  for (let i = 0; i < 20; ++i) {
+    sqsMessages.push({ chunk: { key: `value${i}` }});
+  }
 
-  expect(sqsMock.sendMessage).toHaveBeenCalledTimes(1);
-  expect(sqsMock.sendMessage.mock.calls[0][0]).toEqual(snsMessage);
+  const sentStub = jest.fn();
 
-  expect(callbackMock).toHaveBeenCalledTimes(1);
+  sqsWriter.on('sent', sentStub);
+
+  return new Promise((resolve, reject) => {
+    sqsWriter._writev(sqsMessages, resolve);
+  })
+  .then(() => {
+    expect(sqsMock.sendMessageBatch).toHaveBeenCalledTimes(2);
+    expect(sentStub).toHaveBeenCalledTimes(20);
+  });
 });

@@ -22,7 +22,7 @@ beforeEach(() => {
 });
 
 test('writer errors are propagated to the errorStream', () => {
-  writerMock.emit('error', {
+  writerMock.emit('write-error', {
     message: 'this is the error message',
     data: { key: 'value' }
   });
@@ -59,3 +59,4 @@ test('complete outputs counts to the stream', () => {
   expect(writeArg).toContain('"delete": 3');
   expect(writeArg).toContain('"ignore": 4');
 });
+

@@ -41,22 +41,55 @@ const reader = new JSONReader({
   inputPath: jsonInputPath,
 });
 
-const sqsTransform = new SQSTransform({ queueUrl: program.url });
+const sqsTransform = new SQSTransform();
 
 let output;
 if ((program.url && program.region) || program.dryrun) {
   let sqsWriter;
+  let sqsMock;
   if (program.dryrun) {
-    sqsWriter = new SQSWriter({
-      sqs: {
-        sendMessage(message, callback) {
-          setTimeout(() => callback(), Math.random() * 5);
-        }
+    sqsMock = {
+      sendMessage(message, callback) {
+        setTimeout(() => {
+          const shouldReturnError = Math.random() * 100 <= 1;
+          if (shouldReturnError) {
+            callback(new Error('Error sending individual item'), message);
+          } else {
+            callback();
+          }
+        }, Math.random() * 200);
+      },
+      sendMessageBatch(batch, callback) {
+        setTimeout(() => {
+          const shouldBatchFail = Math.random() * 1000 <= 1;
+          if (shouldBatchFail) {
+            callback(new Error('Error sending batch'), batch);
+          } else {
+            const successful = [];
+            const failed = [];
+            batch.Entries.forEach((entry) => {
+              const shouldItemFail = Math.random() * 1000 <= 1;
+              if (shouldItemFail) {
+                failed.push({
+                  Id: entry.Id,
+                  Message: 'Error sending batch item'
+                });
+              } else {
+                successful.push(entry);
+              }
+            });
+            callback(null, { Successful: successful, Failed: failed });
+          }
+        }, Math.random() * 200);
       }
-    });
-  } else {
-    sqsWriter = new SQSWriter({ region: program.region });
+    };
   }
+
+  sqsWriter = new SQSWriter({
+    region: program.region,
+    queueUrl: program.url,
+    sqs: sqsMock
+  });
 
   output = sqsWriter;
   reader.pipe(sqsTransform).pipe(sqsWriter);
@@ -68,12 +101,12 @@ if ((program.url && program.region) || program.dryrun) {
     finishedReading = true;
   });
 
-  process.stderr.write('\n');
+  process.stdout.write('\n');
   sqsWriter.on('sent', (data) => {
     sentCount++;
     if (! (sentCount % 10) || finishedReading) {
       // go back to the beginning of the previous line and print the new count.
-      process.stderr.write('\033[Fsent: ' + sentCount + '\n');
+      process.stdout.write('\033[Fsent: ' + sentCount + '\n');
     }
   });
 } else {

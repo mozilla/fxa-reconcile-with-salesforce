@@ -16,9 +16,7 @@ const CREATE_DATE = new Date(CREATE_DATE_MS);
 const msToSeconds = (ms) => ms / 1000;
 
 beforeEach(() => {
-  sqsTransform = new SQSTransform({
-    queueUrl: 'http://sqs.queue.url'
-  });
+  sqsTransform = new SQSTransform({});
 });
 
 test('_transform pushes the expected output to the queuem', () => {
@@ -56,8 +54,7 @@ test('_transform pushes the expected output to the queuem', () => {
       locale: 'locale',
       uid: 'uid', // note, this cannot be sorted after ts or else the test fails.
       ts: TIMESTAMP_SECONDS,
-    })}),
-    QueueUrl: 'http://sqs.queue.url'
+    })})
   });
 
   expect(callbackMock).toHaveBeenCalledTimes(1);
