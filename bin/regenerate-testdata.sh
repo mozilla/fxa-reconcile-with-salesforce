@@ -1,4 +1,4 @@
-#!/usr/bin/env sh -e
+#!/bin/sh -e
 
 FXA=./test_data/fxa.csv
 FXA_SORTED=./test_data/fxa_sorted.csv
