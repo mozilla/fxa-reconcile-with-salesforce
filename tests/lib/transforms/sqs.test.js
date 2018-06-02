@@ -13,14 +13,12 @@ const CREATE_DATE_MS = 1473453024553;
 const CREATE_DATE_SECONDS = CREATE_DATE_MS / 1000;
 const CREATE_DATE = new Date(CREATE_DATE_MS);
 
-const msToSeconds = (ms) => ms / 1000;
-
 beforeEach(() => {
   sqsTransform = new SQSTransform({});
 });
 
 test('_transform pushes the expected output to the queuem', () => {
-  let callbackMock = jest.fn();
+  const callbackMock = jest.fn();
   sqsTransform.push = jest.fn();
 
   const msg = {
@@ -38,23 +36,26 @@ test('_transform pushes the expected output to the queuem', () => {
 
   expect(params).toEqual({
     MessageAttributes: {
-      email_domain: {
+      email_domain: { // eslint-disable-line camelcase
         DataType: 'String',
         StringValue: 'testuser.com'
       },
-      event_type: {
+      event_type: { // eslint-disable-line camelcase
         DataType: 'String',
         StringValue: 'verified'
       },
     },
+    /* eslint-disable */ // eslint-disable-line sorting/sort-object-props didn't work here.
     MessageBody: JSON.stringify({ Message: JSON.stringify({
       createDate: CREATE_DATE_SECONDS,
       email: 'testuser@testuser.com',
       event: 'verified',
       locale: 'locale',
-      uid: 'uid', // note, this cannot be sorted after ts or else the test fails.
+      // note, `uid` cannot be sorted after ts or else the test fails.
+      uid: 'uid',
       ts: TIMESTAMP_SECONDS,
     })})
+    /* eslint-enable */
   });
 
   expect(callbackMock).toHaveBeenCalledTimes(1);

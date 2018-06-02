@@ -3,7 +3,6 @@ const JSONReader = require('../../../lib/readers/json');
 const NullWriter = require('../../../lib/writers/null');
 
 let jsonReader;
-let counts;
 
 beforeEach(() => {
   jsonReader = new JSONReader({
