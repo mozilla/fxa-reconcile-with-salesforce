@@ -65,7 +65,7 @@ test('_splitLineBuffer returns ["zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"] if n
 });
 
 test('_normalizeCSVDate converts a string to a date', () => {
-  let date = csvReader._normalizeCSVDate('1473453024553');
+  const date = csvReader._normalizeCSVDate('1473453024553');
   expect(date.getTime()).toBe(1473453024553);
 });
 

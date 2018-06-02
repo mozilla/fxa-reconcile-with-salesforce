@@ -4,9 +4,6 @@ const ReconciliationManager = require('../lib');
 let errorStreamMock;
 let readerMock;
 let writerMock;
-let manager;
-
-let errorStreamWrite;
 
 beforeEach(() => {
   readerMock = new EventEmitter();
@@ -18,41 +15,41 @@ beforeEach(() => {
   errorStreamMock = {
     write: jest.fn()
   };
-  manager = new ReconciliationManager(readerMock, writerMock, errorStreamMock);
+  const manager = new ReconciliationManager(readerMock, writerMock, errorStreamMock); // eslint-disable-line no-unused-vars
 });
 
 test('writer errors are propagated to the errorStream', () => {
   writerMock.emit('write-error', {
-    message: 'this is the error message',
-    data: { key: 'value' }
+    data: { key: 'value' },
+    message: 'this is the error message'
   });
 
   expect(errorStreamMock.write).toHaveBeenCalledTimes(1);
-  let writeArg = errorStreamMock.write.mock.calls[0][0];
+  const writeArg = errorStreamMock.write.mock.calls[0][0];
   expect(writeArg).toContain(JSON.stringify({key: 'value'}));
 });
 
 test('reader errors are propagated to the errorStream', () => {
   readerMock.emit('error', {
-    message: 'this is the error message',
-    data: { key: 'value' }
+    data: { key: 'value' },
+    message: 'this is the error message'
   });
 
   expect(errorStreamMock.write).toHaveBeenCalledTimes(1);
-  let writeArg = errorStreamMock.write.mock.calls[0][0];
+  const writeArg = errorStreamMock.write.mock.calls[0][0];
   expect(writeArg).toContain(JSON.stringify({key: 'value'}));
 });
 
 test('complete outputs counts to the stream', () => {
   readerMock.emit('complete', {
     create: 1,
-    update: 2,
     delete: 3,
-    ignore: 4
+    ignore: 4,
+    update: 2,
   });
 
   expect(errorStreamMock.write).toHaveBeenCalledTimes(1);
-  let writeArg = errorStreamMock.write.mock.calls[0][0];
+  const writeArg = errorStreamMock.write.mock.calls[0][0];
   expect(writeArg).toContain('"actionable": 6');
   expect(writeArg).toContain('"create": 1');
   expect(writeArg).toContain('"update": 2');

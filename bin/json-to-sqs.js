@@ -45,7 +45,6 @@ const sqsTransform = new SQSTransform();
 
 let output;
 if ((program.url && program.region) || program.dryrun) {
-  let sqsWriter;
   let sqsMock;
   if (program.dryrun) {
     sqsMock = {
@@ -78,16 +77,16 @@ if ((program.url && program.region) || program.dryrun) {
                 successful.push(entry);
               }
             });
-            callback(null, { Successful: successful, Failed: failed });
+            callback(null, { Failed: failed, Successful: successful });
           }
         }, Math.random() * 200);
       }
     };
   }
 
-  sqsWriter = new SQSWriter({
-    region: program.region,
+  const sqsWriter = new SQSWriter({
     queueUrl: program.url,
+    region: program.region,
     sqs: sqsMock
   });
 
@@ -114,4 +113,4 @@ if ((program.url && program.region) || program.dryrun) {
   reader.pipe(sqsTransform).pipe(new JSONTransform({ suffix: '\n' })).pipe(process.stdout);
 }
 
-new ReconciliationManager(reader, output);
+const reconciler = new ReconciliationManager(reader, output); // eslint-disable-line no-unused-vars

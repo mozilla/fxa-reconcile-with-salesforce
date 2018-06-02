@@ -19,8 +19,8 @@ beforeEach(() => {
   };
 
   sqsWriter = new SQSWriter({
-    sqs: sqsMock,
-    queueUrl: 'http://sqs.queue.url'
+    queueUrl: 'http://sqs.queue.url',
+    sqs: sqsMock
   });
 });
 
@@ -28,8 +28,7 @@ test('_write sends to SQS, calls the callback', () => {
   const sqsMessage = { key: 'value' };
   return new Promise((resolve, reject) => {
     sqsWriter._write(sqsMessage, null, resolve);
-  })
-  .then(() => {
+  }).then(() => {
     expect(sqsMock.sendMessage).toHaveBeenCalledTimes(1);
     expect(sqsMock.sendMessage.mock.calls[0][0]).toEqual(sqsMessage);
   });
@@ -47,8 +46,7 @@ test('_writev sends a batch to SQS, calls the callback', () => {
 
   return new Promise((resolve, reject) => {
     sqsWriter._writev(sqsMessages, resolve);
-  })
-  .then(() => {
+  }).then(() => {
     expect(sqsMock.sendMessageBatch).toHaveBeenCalledTimes(2);
     expect(sentStub).toHaveBeenCalledTimes(20);
   });

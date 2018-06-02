@@ -11,7 +11,7 @@ const ReconciliationManager = require('../lib/index');
 
 program
   .option('-f, --fxa [filename]', 'FxA CSV, format expected to be `uid,email,locale`')
-  .option('-s, --salesforce [filename]', 'Salesforce CSV, format expected to be `uid,email`')
+  .option('-s, --salesforce [filename]', 'Salesforce CSV, format expected to be `uid,email`');
 
 program.parse(process.argv);
 
@@ -37,4 +37,5 @@ const reader = new CSVReader({
 
 reader.pipe(new JSONTransform({ suffix: '\n' })).pipe(process.stdout);
 
-const reconciler = new ReconciliationManager(reader, process.stdout);
+const reconciler = new ReconciliationManager(reader, process.stdout); // eslint-disable-line no-unused-vars
+
