@@ -110,7 +110,7 @@ function createSqsMock () {
               successful.push(entry);
             }
           });
-          callback(null, { Successful: successful, Failed: failed });
+          callback(null, { Failed: failed, Successful: successful });
         }
       }, Math.random() * 200);
     }

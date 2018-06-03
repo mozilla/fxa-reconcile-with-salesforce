@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const program = require('commander');
-const uuid = require('node-uuid');
+const uuid = require('uuid');
 
 const { updateBucketStats, calculateBucketDistribution } = require('../lib/statistics');
 const PrefixSuffixTransform = require('../lib/transforms/prefix-suffix');
