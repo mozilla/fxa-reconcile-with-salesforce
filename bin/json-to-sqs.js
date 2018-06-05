@@ -15,6 +15,7 @@ const SQSTransform = require('../lib/transforms/sqs');
 const SQSWriter = require('../lib/writers/sqs');
 
 program
+  .option('-h, --highwater [N]', 'High water mark, defaults to 16384. See https://nodejs.org/api/stream.html#stream_constructor_new_stream_writable_options')
   .option('-i, --input <filename>', 'JSON input')
   .option('-u, --url [SQS_url]', 'SQS URL')
   .option('-r, --region [AWS_region]', 'AWS Region')
@@ -35,13 +36,16 @@ if (! program.input) {
   process.exit(1);
 }
 
+const highWaterMark = parseInt(program.highwater || 16384, 10);
 
 const jsonInputPath = path.resolve(process.cwd(), program.input);
 const reader = new JSONReader({
+  highWaterMark,
   inputPath: jsonInputPath,
 });
 
-const sqsTransform = new SQSTransform();
+const sqsTransform = new SQSTransform({ highWaterMark });
+
 
 let output;
 if ((program.url && program.region) || program.dryrun) {
@@ -51,6 +55,7 @@ if ((program.url && program.region) || program.dryrun) {
   }
 
   const sqsWriter = new SQSWriter({
+    highWaterMark,
     queueUrl: program.url,
     region: program.region,
     sqs: sqsMock
