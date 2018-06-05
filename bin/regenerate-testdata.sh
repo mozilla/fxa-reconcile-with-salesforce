@@ -6,7 +6,7 @@ SALESFORCE=./test_data/salesforce.csv
 SALESFORCE_SORTED=./test_data/salesforce_sorted.csv
 EXPECTED_COUNTS=./test_data/expected.json
 
-COUNT=50000
+COUNT=4000
 PC=27
 PU=2
 PD=1

@@ -48,41 +48,7 @@ if ((program.url && program.region) || program.dryrun) {
   let sqsWriter;
   let sqsMock;
   if (program.dryrun) {
-    sqsMock = {
-      sendMessage(message, callback) {
-        setTimeout(() => {
-          const shouldReturnError = Math.random() * 100 <= 1;
-          if (shouldReturnError) {
-            callback(new Error('Error sending individual item'), message);
-          } else {
-            callback();
-          }
-        }, Math.random() * 200);
-      },
-      sendMessageBatch(batch, callback) {
-        setTimeout(() => {
-          const shouldBatchFail = Math.random() * 1000 <= 1;
-          if (shouldBatchFail) {
-            callback(new Error('Error sending batch'), batch);
-          } else {
-            const successful = [];
-            const failed = [];
-            batch.Entries.forEach((entry) => {
-              const shouldItemFail = Math.random() * 1000 <= 1;
-              if (shouldItemFail) {
-                failed.push({
-                  Id: entry.Id,
-                  Message: 'Error sending batch item'
-                });
-              } else {
-                successful.push(entry);
-              }
-            });
-            callback(null, { Successful: successful, Failed: failed });
-          }
-        }, Math.random() * 200);
-      }
-    };
+    sqsMock = createSqsMock();
   }
 
   sqsWriter = new SQSWriter({
@@ -115,3 +81,41 @@ if ((program.url && program.region) || program.dryrun) {
 }
 
 new ReconciliationManager(reader, output);
+
+function createSqsMock () {
+  return {
+    sendMessage(message, callback) {
+      setTimeout(() => {
+        const shouldReturnError = Math.random() * 100 <= 1;
+        if (shouldReturnError) {
+          callback(new Error('Error sending individual item'), message);
+        } else {
+          callback();
+        }
+      }, Math.random() * 200);
+    },
+    sendMessageBatch(batch, callback) {
+      setTimeout(() => {
+        const shouldBatchFail = Math.random() * 1000 <= 1;
+        if (shouldBatchFail) {
+          callback(new Error('Error sending batch'), batch);
+        } else {
+          const successful = [];
+          const failed = [];
+          batch.Entries.forEach((entry) => {
+            const shouldItemFail = Math.random() * 1000 <= 1;
+            if (shouldItemFail) {
+              failed.push({
+                Id: entry.Id,
+                Message: 'Error sending batch item'
+              });
+            } else {
+              successful.push(entry);
+            }
+          });
+          callback(null, { Successful: successful, Failed: failed });
+        }
+      }, Math.random() * 200);
+    }
+  };
+}
