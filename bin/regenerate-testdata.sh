@@ -10,8 +10,13 @@ COUNT=4000
 PC=27
 PU=2
 PD=1
+PI=0
 
-node ./bin/generate-test-data.js -f $FXA -s $SALESFORCE -e $EXPECTED_COUNTS -c $COUNT --pc $PC --pu $PU --pd $PD
+echo 'generating data'
+node ./bin/generate-test-data.js -f $FXA -s $SALESFORCE -e $EXPECTED_COUNTS -c $COUNT --pc $PC --pu $PU --pd $PD --pi $PI
 
+echo 'sorting FxA data'
 sort $FXA > $FXA_SORTED
+
+echo 'sorting Salesforce data'
 sort $SALESFORCE > $SALESFORCE_SORTED
