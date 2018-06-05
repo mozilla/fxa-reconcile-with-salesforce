@@ -4,17 +4,22 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint index.js bin lib tests"
   },
   "author": "Shane Tomlinson <stomlinson@mozilla.com> (https://shanetomlinson.com)",
   "license": "MPL-2.0",
   "dependencies": {
     "aws-sdk": "^2.234.1",
     "commander": "^2.15.1",
-    "n-readlines": "^0.2.8"
+    "n-readlines": "^0.2.8",
+    "uuid": "^3.2.1"
   },
   "devDependencies": {
-    "jest": "^22.4.3",
-    "node-uuid": "^1.4.8"
+    "eslint": "^4.19.1",
+    "eslint-plugin-fxa": "^1.0.0",
+    "eslint-plugin-jest": "^21.17.0",
+    "eslint-plugin-sorting": "^0.3.0",
+    "jest": "^22.4.4"
   }
 }

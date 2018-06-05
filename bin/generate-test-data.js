@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const program = require('commander');
-const uuid = require('node-uuid');
+const uuid = require('uuid');
 
 const { updateBucketStats, calculateBucketDistribution } = require('../lib/statistics');
 const PrefixSuffixTransform = require('../lib/transforms/prefix-suffix');
@@ -32,12 +32,12 @@ const fxaWriter = createFxaWriter(program);
 const salesforceWriter = createSalesforceWriter(program);
 generate(count, percentCreate, percentDelete, percentUpdate, percentInvalidUid, fxaWriter, salesforceWriter)
   .then((counts) => {
-    let total = counts.ignore + counts.create + counts.update + counts.delete + counts.error;
+    const total = counts.ignore + counts.create + counts.update + counts.delete + counts.error;
     counts.total = total;
     const expected = JSON.stringify(counts, null, 2);
     console.log('Counts:\n', expected);
     if (program.expected) {
-      fs.writeFileSync(path.resolve(process.cwd(), program.expected), expected)
+      fs.writeFileSync(path.resolve(process.cwd(), program.expected), expected);
     }
   });
 
@@ -46,10 +46,10 @@ async function generate(count, percentCreate, percentDelete, percentUpdate, perc
   const changeMax = deleteMax + percentUpdate;
   const invalidUidMax = changeMax + percentInvalidUid;
   const counts = {
-    ignore: 0,
     create: 0,
     delete: 0,
     error: 0,
+    ignore: 0,
     update: 0,
   };
   const msSinceUnixEpoch = (new Date()).getTime();
