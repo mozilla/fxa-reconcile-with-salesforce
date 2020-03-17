@@ -5,7 +5,7 @@
 const path = require('path');
 const program = require('commander');
 
-const ReconciliationManager = require('../lib/index');
+const StreamManager = require('../lib/reconcilers/stream-manager');
 
 const JSONReader = require('../lib/readers/json');
 
@@ -39,15 +39,15 @@ if (! program.input) {
 const highWaterMark = parseInt(program.highwater || 16384, 10);
 
 const jsonInputPath = path.resolve(process.cwd(), program.input);
-const reader = new JSONReader({
+const inputStream = new JSONReader({
   highWaterMark,
   inputPath: jsonInputPath,
 });
 
-const sqsTransform = new SQSTransform({ highWaterMark });
+const sqsTransformStream = new SQSTransform({ highWaterMark });
 
 
-let output;
+let outputStream;
 if ((program.url && program.region) || program.dryrun) {
   let sqsMock;
   if (program.dryrun) {
@@ -61,27 +61,26 @@ if ((program.url && program.region) || program.dryrun) {
     sqs: sqsMock
   });
 
-  output = sqsWriter;
-  reader.pipe(sqsTransform).pipe(sqsWriter);
-
-  let sentCount = 0;
-
+  outputStream = sqsWriter;
+  inputStream.pipe(sqsTransformStream).pipe(sqsWriter);
+/*
   let finishedReading = false;
-  reader.on('end', () => {
+  inputStream.on('end', () => {
     finishedReading = true;
   });
 
   process.stdout.write('\n');
   sqsWriter.on('sent', (data) => {
-    sentCount++;
+    const sentCount = sqsTransformStream.counts.sent;
+
     if (! (sentCount % 10) || finishedReading) {
       // go back to the beginning of the previous line and print the new count.
-      process.stdout.write('\033[Fsent: ' + sentCount + '\n');
+      process.stdout.write(`\x1b[Fsent: ${sentCount}\n`);
     }
-  });
+  });*/
 } else {
-  output = process.stdout;
-  reader.pipe(sqsTransform).pipe(new JSONTransform({ suffix: '\n' })).pipe(process.stdout);
+  outputStream = process.stdout;
+  inputStream.pipe(sqsTransformStream).pipe(new JSONTransform({ suffix: '\n' })).pipe(outputStream);
 }
 
 function createSqsMock () {
@@ -122,4 +121,4 @@ function createSqsMock () {
   };
 }
 
-const reconciler = new ReconciliationManager(reader, output); // eslint-disable-line no-unused-vars
+void new StreamManager(inputStream, outputStream, sqsTransformStream, process.stderr); // eslint-disable-line no-unused-vars

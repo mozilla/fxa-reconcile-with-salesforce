@@ -2,12 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 
-const CSVReader = require('../lib/readers/csv');
+const TwoCSVReader = require('../lib/readers/csv');
 const JSONTransform = require('../lib/transforms/json');
-const ReconciliationManager = require('../lib/index');
+const FxaAndSalesforceReconcilingStream = require('../lib/reconcilers/fxa-and-salesforce');
+const StreamManager = require('../lib/reconcilers/stream-manager');
 
 program
   .option('-f, --fxa <filename>', 'FxA CSV, format expected to be `uid,email,locale`')
@@ -16,9 +18,11 @@ program
 
 program.parse(process.argv);
 
+const programName = path.basename(process.argv[1]);
+
 function usage () {
   console.log(`Usage:
-  csv-to-json -f <fxa_csv_filename> -s <salesforce_csv_filename>
+  node ${programName} -f <fxa_csv_filename> -s <salesforce_csv_filename>
 `);
 }
 
@@ -31,14 +35,29 @@ const highWaterMark = parseInt(program.highwater || 16384, 10);
 
 const fxaInputPath = path.resolve(process.cwd(), program.fxa);
 const salesforceInputPath = path.resolve(process.cwd(), program.salesforce);
-const reader = new CSVReader({
-  fxaInputPath,
+const readingStream = new TwoCSVReader({
   highWaterMark,
-  salesforceInputPath,
+  leftInputPath: salesforceInputPath,
+  leftSource: 'sf',
+  rightInputPath: fxaInputPath,
+  rightSource: 'fxa',
   separator: ','
 });
 
-reader.pipe(new JSONTransform({ highWaterMark, suffix: '\n' })).pipe(process.stdout);
 
-const reconciler = new ReconciliationManager(reader, process.stdout); // eslint-disable-line no-unused-vars
+const reconcilingStream = new FxaAndSalesforceReconcilingStream({
+  highWaterMark,
+  timestamp: getTimestamp(fxaInputPath)
+});
+
+const outputStream = process.stdout;
+
+readingStream.pipe(reconcilingStream).pipe(new JSONTransform({ highWaterMark, suffix: '\n' })).pipe(outputStream);
+
+void new StreamManager(readingStream, outputStream, reconcilingStream, process.stdout);
+
+function getTimestamp (inputPath) {
+  const stats = fs.statSync(inputPath);
+  return new Date(stats.ctimeMs);
+}
 
